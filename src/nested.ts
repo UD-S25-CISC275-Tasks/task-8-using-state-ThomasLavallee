@@ -1,12 +1,31 @@
 import { Answer } from "./interfaces/answer";
 import { Question, QuestionType } from "./interfaces/question";
+import { duplicateQuestion } from "./objects";
+import { makeBlankQuestion } from "./objects";
 
 /**
  * Consumes an array of questions and returns a new array with only the questions
  * that are `published`.
  */
 export function getPublishedQuestions(questions: Question[]): Question[] {
-    return [];
+    // Filter out unpublished questions
+    let publishedQuestions: Question[] = questions.filter(
+        (currentQuestion: Question): boolean => {
+            return currentQuestion.published;
+        }
+    );
+
+    // Clone all questions to make deep copies
+    let clonedQuestions: Question[] = publishedQuestions.map(
+        (currentQuestion: Question): Question => {
+            return {
+                ...currentQuestion,
+                options: [...currentQuestion.options]
+            };
+        }
+    );
+
+    return clonedQuestions;
 }
 
 /**
@@ -15,7 +34,28 @@ export function getPublishedQuestions(questions: Question[]): Question[] {
  * `expected`, and an empty array for its `options`.
  */
 export function getNonEmptyQuestions(questions: Question[]): Question[] {
-    return [];
+    // Save only the nonempty questions
+    const nonEmptyQuestions: Question[] = questions.filter(
+        (currentQuestion: Question): boolean => {
+            return (
+                currentQuestion.body.length > 0 ||
+                currentQuestion.expected.length > 0 ||
+                currentQuestion.options.length > 0
+            );
+        }
+    );
+
+    // Make a deep copy of each question (the options array)
+    const clonedQuestions: Question[] = nonEmptyQuestions.map(
+        (currentQuestion: Question): Question => {
+            return {
+                ...currentQuestion,
+                options: [...currentQuestion.options]
+            };
+        }
+    );
+
+    return clonedQuestions;
 }
 
 /***
@@ -26,7 +66,25 @@ export function findQuestion(
     questions: Question[],
     id: number
 ): Question | null {
-    return null;
+    // Find the matching question
+    const matchingQuestion: Question | undefined = questions.find(
+        (currentQuestion: Question) => {
+            return currentQuestion.id === id;
+        }
+    );
+
+    // If match not found, return NULL
+    if (matchingQuestion === undefined) {
+        return null;
+    }
+
+    // Make a deep copy of the question (deep copy of the options array)
+    const clonedQuestion: Question = {
+        ...matchingQuestion,
+        options: [...matchingQuestion.options]
+    };
+
+    return clonedQuestion;
 }
 
 /**
@@ -34,7 +92,24 @@ export function findQuestion(
  * with the given `id`.
  */
 export function removeQuestion(questions: Question[], id: number): Question[] {
-    return [];
+    // Save only questions that do not match the id
+    const filteredQuestions: Question[] = questions.filter(
+        (currentQuestion: Question): boolean => {
+            return currentQuestion.id !== id;
+        }
+    );
+
+    // Make deep copies of the question
+    const clonedQuestions: Question[] = filteredQuestions.map(
+        (currentQuestion: Question): Question => {
+            return {
+                ...currentQuestion,
+                options: [...currentQuestion.options]
+            };
+        }
+    );
+
+    return clonedQuestions;
 }
 
 /***
@@ -42,21 +117,48 @@ export function removeQuestion(questions: Question[], id: number): Question[] {
  * questions, as an array.
  */
 export function getNames(questions: Question[]): string[] {
-    return [];
+    // Save the name of each question
+    const questionNames: string[] = questions.map(
+        (currentQuestion: Question): string => {
+            return currentQuestion.name;
+        }
+    );
+
+    return questionNames;
 }
 
 /***
  * Consumes an array of questions and returns the sum total of all their points added together.
  */
 export function sumPoints(questions: Question[]): number {
-    return 0;
+    // Calculate the sum of all the points for the questions
+    const totalPoints: number = questions.reduce(
+        (currentTotal: number, currentQuestion: Question): number => {
+            return currentTotal + currentQuestion.points;
+        },
+        0
+    );
+
+    return totalPoints;
 }
 
 /***
  * Consumes an array of questions and returns the sum total of the PUBLISHED questions.
  */
 export function sumPublishedPoints(questions: Question[]): number {
-    return 0;
+    // Calculate sum of points for all PUBLISHED questions
+    const publishedTotal: number = questions.reduce(
+        (currentTotal: number, currentQuestion: Question): number => {
+            if (currentQuestion.published) {
+                return currentTotal + currentQuestion.points;
+            } else {
+                return currentTotal;
+            }
+        },
+        0
+    );
+
+    return publishedTotal;
 }
 
 /***
@@ -77,7 +179,18 @@ id,name,options,points,published
  * Check the unit tests for more examples!
  */
 export function toCSV(questions: Question[]): string {
-    return "";
+    // Create CSV string by adding info about each question to accumulator string
+    const questionCSV: string = questions.reduce(
+        (CSVString: string, currentQuestion: Question): string => {
+            return (
+                CSVString +
+                `\n${currentQuestion.id},${currentQuestion.name},${currentQuestion.options.length},${currentQuestion.points},${currentQuestion.published}`
+            );
+        },
+        "id,name,options,points,published"
+    );
+
+    return questionCSV;
 }
 
 /**
@@ -86,7 +199,19 @@ export function toCSV(questions: Question[]): string {
  * making the `text` an empty string, and using false for both `submitted` and `correct`.
  */
 export function makeAnswers(questions: Question[]): Answer[] {
-    return [];
+    // Create each answer, copying fields from the Question
+    let answers: Answer[] = questions.map(
+        (currentQuestion: Question): Answer => {
+            return {
+                questionId: currentQuestion.id,
+                text: "",
+                submitted: false,
+                correct: false
+            };
+        }
+    );
+
+    return answers;
 }
 
 /***
@@ -94,7 +219,18 @@ export function makeAnswers(questions: Question[]): Answer[] {
  * each question is now published, regardless of its previous published status.
  */
 export function publishAll(questions: Question[]): Question[] {
-    return [];
+    // Create new Question array, making deep copy of each object with published field now true
+    let publishedQuestions: Question[] = questions.map(
+        (currentQuestion: Question): Question => {
+            return {
+                ...currentQuestion,
+                options: [...currentQuestion.options],
+                published: true
+            };
+        }
+    );
+
+    return publishedQuestions;
 }
 
 /***
@@ -102,7 +238,22 @@ export function publishAll(questions: Question[]): Question[] {
  * are the same type. They can be any type, as long as they are all the SAME type.
  */
 export function sameType(questions: Question[]): boolean {
-    return false;
+    // Check if they are all multiple choice
+    let allMultiple: boolean = questions.every(
+        (currentQuestion: Question): boolean => {
+            return currentQuestion.type === "multiple_choice_question";
+        }
+    );
+
+    // Check if they are all short answer
+    let allShort: boolean = questions.every(
+        (currentQuestion: Question): boolean => {
+            return currentQuestion.type === "short_answer_question";
+        }
+    );
+
+    // Check if questions are all short answer or all multiple choice
+    return allMultiple || allShort;
 }
 
 /***
@@ -116,7 +267,21 @@ export function addNewQuestion(
     name: string,
     type: QuestionType
 ): Question[] {
-    return [];
+    // Make deep copies of all the questions
+    let clonedQuestions: Question[] = questions.map(
+        (currentQuestion: Question): Question => {
+            return {
+                ...currentQuestion,
+                options: [...currentQuestion.options]
+            };
+        }
+    );
+
+    // Create blank question and add it to end of array
+    let blankQuestion: Question = makeBlankQuestion(id, name, type);
+    clonedQuestions = [...clonedQuestions, blankQuestion];
+
+    return clonedQuestions;
 }
 
 /***
@@ -129,7 +294,25 @@ export function renameQuestionById(
     targetId: number,
     newName: string
 ): Question[] {
-    return [];
+    // Make a deep copy of all questions, and change name to newName of question with targetId
+    let renamedQuestions: Question[] = questions.map(
+        (currentQuestion: Question): Question => {
+            if (currentQuestion.id === targetId) {
+                return {
+                    ...currentQuestion,
+                    options: [...currentQuestion.options],
+                    name: newName
+                };
+            } else {
+                return {
+                    ...currentQuestion,
+                    options: [...currentQuestion.options]
+                };
+            }
+        }
+    );
+
+    return renamedQuestions;
 }
 
 /***
@@ -144,7 +327,64 @@ export function changeQuestionTypeById(
     targetId: number,
     newQuestionType: QuestionType
 ): Question[] {
-    return [];
+    // Make deep copies of all objects, update type and options array of question with matching ID
+    let changedQuestionType: Question[] = questions.map(
+        (currentQuestion: Question): Question => {
+            if (currentQuestion.id === targetId) {
+                if (currentQuestion.type === "multiple_choice_question") {
+                    return {
+                        ...currentQuestion,
+                        type: newQuestionType,
+                        options: []
+                    };
+                } else {
+                    return {
+                        ...currentQuestion,
+                        type: newQuestionType,
+                        options: [...currentQuestion.options]
+                    };
+                }
+            } else {
+                return {
+                    ...currentQuestion,
+                    options: [...currentQuestion.options]
+                };
+            }
+        }
+    );
+
+    return changedQuestionType;
+}
+
+/**
+ *
+ * @param question The question to make a copy of
+ * @param targetOptionIndex The index to insert newOption
+ * @param newOption The new option to add to options array of question
+ * @returns
+ */
+export function editQuestion(
+    question: Question,
+    targetOptionIndex: number,
+    newOption: string
+): Question {
+    // Make a deep copy of the question
+    let clonedQuestion: Question = {
+        ...question,
+        options: [...question.options]
+    };
+
+    // If target index is -1, add newOption to end of options array
+    if (targetOptionIndex === -1) {
+        clonedQuestion.options = [...clonedQuestion.options, newOption];
+    }
+
+    // Else, replace with newOption in options array
+    else {
+        clonedQuestion.options.splice(targetOptionIndex, 1, newOption);
+    }
+
+    return clonedQuestion;
 }
 
 /**
@@ -162,8 +402,26 @@ export function editOption(
     targetId: number,
     targetOptionIndex: number,
     newOption: string
-) {
-    return [];
+): Question[] {
+    // Make deep copies of all questions, and change options array of question with targetId
+    let clonedQuestions: Question[] = questions.map(
+        (currentQuestion: Question) => {
+            if (currentQuestion.id === targetId) {
+                return editQuestion(
+                    currentQuestion,
+                    targetOptionIndex,
+                    newOption
+                );
+            } else {
+                return {
+                    ...currentQuestion,
+                    options: [...currentQuestion.options]
+                };
+            }
+        }
+    );
+
+    return clonedQuestions;
 }
 
 /***
@@ -177,5 +435,31 @@ export function duplicateQuestionInArray(
     targetId: number,
     newId: number
 ): Question[] {
-    return [];
+    // Make deep copies of all the questions
+    let clonedQuestions: Question[] = questions.map(
+        (currentQuestion: Question): Question => {
+            return {
+                ...currentQuestion,
+                options: [...currentQuestion.options]
+            };
+        }
+    );
+
+    // Find index of target question
+    let duplicateIndex: number = questions.findIndex(
+        (currentQuestion: Question): boolean => {
+            return currentQuestion.id === targetId;
+        }
+    );
+
+    // Create the new duplicate question
+    let duplicatedQuestion: Question = duplicateQuestion(
+        newId,
+        clonedQuestions[duplicateIndex]
+    );
+
+    // Insert duplicate question in list
+    clonedQuestions.splice(duplicateIndex + 1, 0, duplicatedQuestion);
+
+    return clonedQuestions;
 }
